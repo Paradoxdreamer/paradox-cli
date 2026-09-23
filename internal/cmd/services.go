@@ -8,6 +8,7 @@ package cmd
 
 import (
 	_ "github.com/paradox-cloud/paradox/internal/auth"  // Paradox Auth
+	_ "github.com/paradox-cloud/paradox/internal/flags" // Feature Flags
 	_ "github.com/paradox-cloud/paradox/internal/queue" // Paradox Queue
 
 	"github.com/paradox-cloud/paradox/internal/registry"
