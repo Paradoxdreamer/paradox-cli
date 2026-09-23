@@ -33,6 +33,7 @@ configuration, and dependencies. Useful for troubleshooting setup issues.`,
 			{"CLI version", checkVersion},
 			{"Go runtime", checkGoRuntime},
 			{"Configuration", checkConfig},
+			{"Config schema", checkConfigSchema},
 			{"Data directory", checkDataDir},
 			{"Project config", checkProjectConfig},
 			{"Git available", checkGit},
@@ -141,6 +142,19 @@ func checkDocker() (bool, string) {
 		return true, path + " (daemon not reachable)"
 	}
 	return true, "docker " + strings.TrimSpace(string(out))
+}
+
+func checkConfigSchema() (bool, string) {
+	cfg := GetConfig()
+	if cfg == nil {
+		return false, "config not loaded"
+	}
+	errs := cfg.Validate()
+	if errs.Empty() {
+		return true, "valid"
+	}
+	// Return first error for the summary line; full list via `paradox config validate`
+	return false, errs[0].Error()
 }
 
 // Ensure config package is used
