@@ -3,122 +3,89 @@
 **One CLI for your whole ecosystem.**
 
 ```
-paradox init · paradox scan · paradox deploy · paradox doctor
+paradox init · paradox scan · paradox deploy · paradox doctor · paradox config
 ```
 
 Paradox is the single entry point for the Paradox Cloud platform. It provides configuration management, diagnostics, project initialization, and will eventually orchestrate Auth, Queue, Storage, Feature Flags, Deploy, Observability, and the Agent Runtime.
 
 ## Status
 
-**v0.1.0-dev** — foundation + logging + real scan
+**v0.1.0-dev** — foundation + logging + scan + config validation
 
-| Command     | Status      | Description                                      |
-|-------------|-------------|--------------------------------------------------|
-| `version`   | ✅ Ready    | Print CLI version                                |
-| `init`      | ✅ Ready    | Initialize a new Paradox project                 |
-| `doctor`    | ✅ Ready    | Diagnose environment & configuration             |
-| `scan`      | ✅ Ready    | Discover config, Dockerfiles, compose, runtimes  |
-| `deploy`    | 🚧 Stub     | Build & deploy (Paradox Deploy service)          |
-| `completion`| ✅ Built-in | Shell completion (bash/zsh/fish/powershell)      |
-| Logging     | ✅ Ready    | `--log-level` + `--log-format` (text/json)       |
+| Command              | Status   | Description                                         |
+|----------------------|----------|-----------------------------------------------------|
+| `version`            | ✅ Ready | Print CLI version                                   |
+| `init`               | ✅ Ready | Initialize a new Paradox project                    |
+| `doctor`             | ✅ Ready | Diagnose environment, config & schema               |
+| `scan`               | ✅ Ready | Discover config, Dockerfiles, compose, runtimes     |
+| `config validate`    | ✅ Ready | Validate paradox.yaml against the platform schema   |
+| `config show`        | ✅ Ready | Print effective configuration                       |
+| `deploy`             | 🚧 Stub  | Build & deploy (Paradox Deploy service)             |
+| `completion`         | ✅ Built-in | Shell completion                                 |
+| Logging              | ✅ Ready | `--log-level` + `--log-format` (text/json)          |
+
+## Design rule (anti-spaghetti)
+
+**All configuration lives in `internal/config`.**  
+Auth, Queue, Deploy, Feature Flags, etc. must:
+
+1. Read from `*config.Config` (or nested sections we add there)
+2. Rely on `cfg.Validate()` — never invent their own validation
+3. Never add a second YAML/loader path
+
+When you need a new setting, add it to `Config` + `Validate()` first.
 
 ## Quick start
 
 ```bash
-# Build
 make build
-
-# Initialize a project
 ./bin/paradox init --name my-app
-
-# Check your environment
 ./bin/paradox doctor
-
-# Discover services & artifacts
 ./bin/paradox scan
-
-# See all commands
-./bin/paradox --help
+./bin/paradox config validate
+./bin/paradox config show
 ```
 
 ## Configuration
 
-Paradox looks for `paradox.yaml` in:
-
-1. Current directory
-2. `./.paradox/`
-3. `~/.config/paradox/`
-4. `~/.paradox/`
-
-You can also pass `--config /path/to/file.yaml`.
-
-Environment variables are supported with the `PARADOX_` prefix (e.g. `PARADOX_LOG_LEVEL=debug`).
-
-Example `paradox.yaml`:
+Looks for `paradox.yaml` in: `.` → `./.paradox/` → `~/.config/paradox/` → `~/.paradox/`
 
 ```yaml
 project_name: my-app
-environment: development
-log_level: info
+environment: development   # development|staging|production|test
+log_level: info            # debug|info|warn|error
 services: []
 ```
 
 ## Logging
 
-Structured logging is built in (stdlib `log/slog`).
-
 ```bash
-# Human-readable (default)
 paradox doctor --log-level=debug
-
-# Machine-readable JSON (great for CI / shipping to Observability later)
-paradox doctor --log-level=info --log-format=json
+paradox doctor --log-format=json
 ```
-
-| Flag           | Values                  | Default     |
-|----------------|-------------------------|-------------|
-| `--log-level`  | debug, info, warn, error | info (or from config) |
-| `--log-format` | text, json              | text        |
-
-Logs go to stderr so they never pollute command output.
 
 ## Project structure
 
 ```
 paradox-cli/
-├── cmd/paradox/          # main entrypoint
+├── cmd/paradox/
 ├── internal/
-│   ├── cmd/              # cobra commands
-│   ├── config/           # configuration loading
-│   ├── logging/          # structured logger (slog)
-│   ├── scan/             # project discovery
-│   └── version/          # version info (ldflags)
+│   ├── cmd/
+│   ├── config/      # Load + Validate (single source of truth)
+│   ├── logging/
+│   ├── scan/
+│   └── version/
 ├── Makefile
 ├── go.mod
 └── README.md
 ```
 
-## Development
+## Roadmap
 
-```bash
-make build          # build binary to bin/paradox
-make run            # go run
-make test           # run tests (when they exist)
-make clean          # remove build artifacts
-```
-
-Build with version info:
-
-```bash
-make build VERSION=0.1.0 COMMIT=$(git rev-parse --short HEAD)
-```
-
-## Roadmap (next)
-
-1. Config validation — schema + better error messages
-2. Plugin system — allow extensions for Auth / Queue / etc.
-3. Self-update mechanism
-4. Wire into Paradox Auth, Queue, Deploy as those land
+1. ~~Config validation~~ ✅
+2. Plugin system (so Auth / Queue register cleanly)
+3. Self-update
+4. Wire Auth → Queue → Deploy
 
 ## License
 
