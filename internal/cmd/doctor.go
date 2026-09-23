@@ -10,6 +10,7 @@ import (
 
 	"github.com/paradox-cloud/paradox/internal/config"
 	"github.com/paradox-cloud/paradox/internal/logging"
+	"github.com/paradox-cloud/paradox/internal/registry"
 	"github.com/paradox-cloud/paradox/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -38,6 +39,15 @@ configuration, and dependencies. Useful for troubleshooting setup issues.`,
 			{"Project config", checkProjectConfig},
 			{"Git available", checkGit},
 			{"Docker available", checkDocker},
+		}
+
+		// Service-contributed checks (auth, queue, …)
+		for _, dc := range registry.DoctorChecks() {
+			dc := dc // capture
+			checks = append(checks, struct {
+				name string
+				fn   func() (ok bool, detail string)
+			}{name: dc.Name, fn: dc.Fn})
 		}
 
 		allOK := true
@@ -105,7 +115,6 @@ func checkDataDir() (bool, string) {
 }
 
 func checkProjectConfig() (bool, string) {
-	// Look for paradox.yaml in current dir or .paradox/
 	candidates := []string{
 		"paradox.yaml",
 		"paradox.yml",
@@ -138,7 +147,6 @@ func checkDocker() (bool, string) {
 	}
 	out, err := exec.Command("docker", "version", "--format", "{{.Server.Version}}").Output()
 	if err != nil {
-		// Docker binary exists but daemon may not be running
 		return true, path + " (daemon not reachable)"
 	}
 	return true, "docker " + strings.TrimSpace(string(out))
@@ -153,9 +161,7 @@ func checkConfigSchema() (bool, string) {
 	if errs.Empty() {
 		return true, "valid"
 	}
-	// Return first error for the summary line; full list via `paradox config validate`
 	return false, errs[0].Error()
 }
 
-// Ensure config package is used
 var _ = config.Default
