@@ -1,0 +1,19 @@
+# Binaries
+bin/
+paradox
+*.exe
+
+# Test / coverage
+coverage.out
+*.test
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Local
+.paradox/
+*.log
+.env
+.env.*
