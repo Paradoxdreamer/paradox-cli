@@ -10,14 +10,14 @@ Paradox is the single entry point for the Paradox Cloud platform. It provides co
 
 ## Status
 
-**v0.1.0-dev** — foundation + structured logging complete
+**v0.1.0-dev** — foundation + logging + real scan
 
 | Command     | Status      | Description                                      |
 |-------------|-------------|--------------------------------------------------|
 | `version`   | ✅ Ready    | Print CLI version                                |
 | `init`      | ✅ Ready    | Initialize a new Paradox project                 |
 | `doctor`    | ✅ Ready    | Diagnose environment & configuration             |
-| `scan`      | 🚧 Stub     | Discover services (next)                         |
+| `scan`      | ✅ Ready    | Discover config, Dockerfiles, compose, runtimes  |
 | `deploy`    | 🚧 Stub     | Build & deploy (Paradox Deploy service)          |
 | `completion`| ✅ Built-in | Shell completion (bash/zsh/fish/powershell)      |
 | Logging     | ✅ Ready    | `--log-level` + `--log-format` (text/json)       |
@@ -33,6 +33,9 @@ make build
 
 # Check your environment
 ./bin/paradox doctor
+
+# Discover services & artifacts
+./bin/paradox scan
 
 # See all commands
 ./bin/paradox --help
@@ -88,6 +91,7 @@ paradox-cli/
 │   ├── cmd/              # cobra commands
 │   ├── config/           # configuration loading
 │   ├── logging/          # structured logger (slog)
+│   ├── scan/             # project discovery
 │   └── version/          # version info (ldflags)
 ├── Makefile
 ├── go.mod
@@ -111,11 +115,10 @@ make build VERSION=0.1.0 COMMIT=$(git rev-parse --short HEAD)
 
 ## Roadmap (next)
 
-1. **scan** — real service discovery (Dockerfiles, compose, language runtimes)
-2. **config validation** — schema + better error messages
-3. **plugin system** — allow extensions for Auth / Queue / etc.
-4. **update** — self-update mechanism
-5. Wire into Paradox Auth, Queue, Deploy as those land
+1. Config validation — schema + better error messages
+2. Plugin system — allow extensions for Auth / Queue / etc.
+3. Self-update mechanism
+4. Wire into Paradox Auth, Queue, Deploy as those land
 
 ## License
 
