@@ -3,37 +3,38 @@
 **One CLI for your whole ecosystem.**
 
 ```
-paradox init · paradox scan · paradox deploy · paradox doctor · paradox config
+paradox init · scan · doctor · config · auth · deploy
 ```
-
-Paradox is the single entry point for the Paradox Cloud platform. It provides configuration management, diagnostics, project initialization, and will eventually orchestrate Auth, Queue, Storage, Feature Flags, Deploy, Observability, and the Agent Runtime.
 
 ## Status
 
-**v0.1.0-dev** — foundation + logging + scan + config validation
+**v0.1.0-dev**
 
-| Command              | Status   | Description                                         |
-|----------------------|----------|-----------------------------------------------------|
-| `version`            | ✅ Ready | Print CLI version                                   |
-| `init`               | ✅ Ready | Initialize a new Paradox project                    |
-| `doctor`             | ✅ Ready | Diagnose environment, config & schema               |
-| `scan`               | ✅ Ready | Discover config, Dockerfiles, compose, runtimes     |
-| `config validate`    | ✅ Ready | Validate paradox.yaml against the platform schema   |
-| `config show`        | ✅ Ready | Print effective configuration                       |
-| `deploy`             | 🚧 Stub  | Build & deploy (Paradox Deploy service)             |
-| `completion`         | ✅ Built-in | Shell completion                                 |
-| Logging              | ✅ Ready | `--log-level` + `--log-format` (text/json)          |
+| Area | Status | Notes |
+|------|--------|-------|
+| CLI foundation | ✅ | Cobra, config, logging |
+| `init` / `doctor` / `scan` | ✅ | |
+| Config validation | ✅ | Single schema in `internal/config` |
+| Service registry | ✅ | Thin, explicit — no plugin magic |
+| Paradox Auth v0 | ✅ | `auth status/init/whoami` + doctor check |
+| Deploy | 🚧 | Stub |
 
-## Design rule (anti-spaghetti)
+## Architecture (anti-spaghetti)
 
-**All configuration lives in `internal/config`.**  
-Auth, Queue, Deploy, Feature Flags, etc. must:
+```
+CLI (cmd/)
+ └── registry          ← services register here only
+      └── auth         ← first real service
+      └── queue        ← next
+      └── …
+ └── config            ← single source of truth + Validate()
+ └── logging / scan
+```
 
-1. Read from `*config.Config` (or nested sections we add there)
-2. Rely on `cfg.Validate()` — never invent their own validation
-3. Never add a second YAML/loader path
-
-When you need a new setting, add it to `Config` + `Validate()` first.
+**Rules:**
+1. New settings → `internal/config` + `Validate()` first
+2. New services → `registry.Register` + blank import in `internal/cmd/services.go`
+3. No second config loaders, no ad-hoc doctor checks outside the registry
 
 ## Quick start
 
@@ -43,49 +44,21 @@ make build
 ./bin/paradox doctor
 ./bin/paradox scan
 ./bin/paradox config validate
-./bin/paradox config show
+./bin/paradox auth init
+./bin/paradox auth status
 ```
 
-## Configuration
+## Auth (v0)
 
-Looks for `paradox.yaml` in: `.` → `./.paradox/` → `~/.config/paradox/` → `~/.paradox/`
-
-```yaml
-project_name: my-app
-environment: development   # development|staging|production|test
-log_level: info            # debug|info|warn|error
-services: []
-```
-
-## Logging
+Local store under `~/.paradox/auth` (or `$PARADOX_DATA_DIR/auth`).
 
 ```bash
-paradox doctor --log-level=debug
-paradox doctor --log-format=json
+paradox auth init      # create store + users.json
+paradox auth status
+paradox auth whoami    # stub until JWT/sessions land
 ```
 
-## Project structure
-
-```
-paradox-cli/
-├── cmd/paradox/
-├── internal/
-│   ├── cmd/
-│   ├── config/      # Load + Validate (single source of truth)
-│   ├── logging/
-│   ├── scan/
-│   └── version/
-├── Makefile
-├── go.mod
-└── README.md
-```
-
-## Roadmap
-
-1. ~~Config validation~~ ✅
-2. Plugin system (so Auth / Queue register cleanly)
-3. Self-update
-4. Wire Auth → Queue → Deploy
+Next Auth work: JWT issuance, login, sessions.
 
 ## License
 
