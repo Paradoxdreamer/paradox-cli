@@ -1,14 +1,13 @@
 package cmd
 
-// Single place that pulls platform services into the CLI.
-
 import (
-	_ "github.com/paradox-cloud/paradox/internal/auth"    // Auth
-	_ "github.com/paradox-cloud/paradox/internal/deploy"  // Deploy
-	_ "github.com/paradox-cloud/paradox/internal/flags"   // Feature Flags
-	_ "github.com/paradox-cloud/paradox/internal/gateway" // API Gateway
-	_ "github.com/paradox-cloud/paradox/internal/queue"   // Queue
-	_ "github.com/paradox-cloud/paradox/internal/storage" // Storage
+	_ "github.com/paradox-cloud/paradox/internal/auth"
+	_ "github.com/paradox-cloud/paradox/internal/deploy"
+	_ "github.com/paradox-cloud/paradox/internal/flags"
+	_ "github.com/paradox-cloud/paradox/internal/gateway"
+	_ "github.com/paradox-cloud/paradox/internal/observability"
+	_ "github.com/paradox-cloud/paradox/internal/queue"
+	_ "github.com/paradox-cloud/paradox/internal/storage"
 
 	"github.com/paradox-cloud/paradox/internal/registry"
 )
