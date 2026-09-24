@@ -11,6 +11,7 @@ import (
 	"github.com/paradox-cloud/paradox/internal/auth"
 	"github.com/paradox-cloud/paradox/internal/flags"
 	"github.com/paradox-cloud/paradox/internal/logging"
+	"github.com/paradox-cloud/paradox/internal/observability"
 	"github.com/paradox-cloud/paradox/internal/queue"
 )
 
@@ -28,6 +29,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/v1/flags/eval", s.handleFlagsEval)
 	mux.HandleFunc("/v1/queue/enqueue", s.handleQueueEnqueue)
 	mux.HandleFunc("/v1/queue/status", s.handleQueueStatus)
+	mux.HandleFunc("/v1/obs/track", s.handleObsTrack)
+	mux.HandleFunc("/v1/obs/metric", s.handleObsMetric)
+	mux.HandleFunc("/v1/obs/status", s.handleObsStatus)
 	return s.middleware(mux)
 }
 
@@ -36,12 +40,11 @@ func (s *Server) middleware(next http.Handler) http.Handler {
 		start := time.Now()
 		ww := &wrapWriter{ResponseWriter: w, status: 200}
 		w.Header().Set("X-Paradox-Gateway", "1")
-
 		if r.URL.Path != "/health" {
 			if s.RequireKey {
 				key := extractAPIKey(r)
 				if key == "" {
-					writeErr(ww, http.StatusUnauthorized, "missing API key (header X-API-Key or Authorization: Bearer pk_…)")
+					writeErr(ww, http.StatusUnauthorized, "missing API key")
 					s.logReq(r, ww.status, start, "")
 					return
 				}
@@ -96,20 +99,14 @@ func (s *Server) handleWhoami(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleFlagsEval(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet && r.Method != http.MethodPost {
-		writeErr(w, http.StatusMethodNotAllowed, "GET or POST")
-		return
-	}
 	key := r.URL.Query().Get("key")
-	user := r.URL.Query().Get("user")
-	email := r.URL.Query().Get("email")
-	env := r.URL.Query().Get("env")
-	if env == "" {
-		env = "development"
-	}
 	if key == "" {
 		writeErr(w, http.StatusBadRequest, "query param key is required")
 		return
+	}
+	env := r.URL.Query().Get("env")
+	if env == "" {
+		env = "development"
 	}
 	store, err := openFlagsStore()
 	if err != nil {
@@ -121,7 +118,7 @@ func (s *Server) handleFlagsEval(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, err.Error())
 		return
 	}
-	ev := f.Evaluate(flags.Context{UserID: user, Email: email, Environment: env})
+	ev := f.Evaluate(flags.Context{UserID: r.URL.Query().Get("user"), Email: r.URL.Query().Get("email"), Environment: env})
 	writeJSON(w, http.StatusOK, ev)
 }
 
@@ -135,12 +132,8 @@ func (s *Server) handleQueueEnqueue(w http.ResponseWriter, r *http.Request) {
 		Payload     map[string]any `json:"payload"`
 		MaxAttempts int            `json:"max_attempts"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeErr(w, http.StatusBadRequest, "invalid JSON body")
-		return
-	}
-	if body.Type == "" {
-		writeErr(w, http.StatusBadRequest, "type is required")
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Type == "" {
+		writeErr(w, http.StatusBadRequest, "type required")
 		return
 	}
 	store, err := openQueueStore()
@@ -149,8 +142,7 @@ func (s *Server) handleQueueEnqueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := fmt.Sprintf("job_%d", time.Now().UnixNano())
-	j := &queue.Job{ID: id, Type: body.Type, Payload: body.Payload, MaxAttempts: body.MaxAttempts}
-	if err := store.Enqueue(j); err != nil {
+	if err := store.Enqueue(&queue.Job{ID: id, Type: body.Type, Payload: body.Payload, MaxAttempts: body.MaxAttempts}); err != nil {
 		writeErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -173,6 +165,60 @@ func (s *Server) handleQueueStatus(w http.ResponseWriter, r *http.Request) {
 		out[string(k)] = v
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) handleObsTrack(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeErr(w, http.StatusMethodNotAllowed, "POST")
+		return
+	}
+	var body struct {
+		Name  string         `json:"name"`
+		Attrs map[string]any `json:"attrs"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Name == "" {
+		writeErr(w, http.StatusBadRequest, "name required")
+		return
+	}
+	if err := observability.Track(body.Name, body.Attrs); err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusAccepted, map[string]string{"status": "ok", "name": body.Name})
+}
+
+func (s *Server) handleObsMetric(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeErr(w, http.StatusMethodNotAllowed, "POST")
+		return
+	}
+	var body struct {
+		Name  string  `json:"name"`
+		Value float64 `json:"value"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Name == "" {
+		writeErr(w, http.StatusBadRequest, "name and value required")
+		return
+	}
+	if err := observability.Metric(body.Name, body.Value); err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusAccepted, map[string]any{"status": "ok", "name": body.Name, "value": body.Value})
+}
+
+func (s *Server) handleObsStatus(w http.ResponseWriter, r *http.Request) {
+	store, err := observability.DefaultStore()
+	if err != nil {
+		writeErr(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	ev, met, errs, err := store.Counts()
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"events": ev, "metrics": met, "errors": errs})
 }
 
 type ctxKey int
