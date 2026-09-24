@@ -1,16 +1,14 @@
 package cmd
 
-// This file is the single place that pulls platform services into the CLI.
-// Each service registers itself via registry.Register in its init().
-//
-// Rule: when you add a new service, add a blank import here.
+// Single place that pulls platform services into the CLI.
 
 import (
-	_ "github.com/paradox-cloud/paradox/internal/auth"    // Paradox Auth
-	_ "github.com/paradox-cloud/paradox/internal/deploy"  // Local Deploy
+	_ "github.com/paradox-cloud/paradox/internal/auth"    // Auth
+	_ "github.com/paradox-cloud/paradox/internal/deploy"  // Deploy
 	_ "github.com/paradox-cloud/paradox/internal/flags"   // Feature Flags
-	_ "github.com/paradox-cloud/paradox/internal/queue"   // Paradox Queue
-	_ "github.com/paradox-cloud/paradox/internal/storage" // Object Storage
+	_ "github.com/paradox-cloud/paradox/internal/gateway" // API Gateway
+	_ "github.com/paradox-cloud/paradox/internal/queue"   // Queue
+	_ "github.com/paradox-cloud/paradox/internal/storage" // Storage
 
 	"github.com/paradox-cloud/paradox/internal/registry"
 )
