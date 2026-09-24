@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	_ "github.com/paradox-cloud/paradox/internal/agent"
 	_ "github.com/paradox-cloud/paradox/internal/auth"
 	_ "github.com/paradox-cloud/paradox/internal/deploy"
 	_ "github.com/paradox-cloud/paradox/internal/flags"
