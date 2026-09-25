@@ -9,6 +9,7 @@ import (
 	_ "github.com/paradox-cloud/paradox/internal/observability"
 	_ "github.com/paradox-cloud/paradox/internal/queue"
 	_ "github.com/paradox-cloud/paradox/internal/storage"
+	_ "github.com/paradox-cloud/paradox/internal/upscale"
 
 	"github.com/paradox-cloud/paradox/internal/registry"
 )
