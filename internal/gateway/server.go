@@ -13,6 +13,7 @@ import (
 	"github.com/paradox-cloud/paradox/internal/logging"
 	"github.com/paradox-cloud/paradox/internal/observability"
 	"github.com/paradox-cloud/paradox/internal/queue"
+	"github.com/paradox-cloud/paradox/internal/upscale"
 )
 
 type Server struct {
@@ -32,6 +33,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/v1/obs/track", s.handleObsTrack)
 	mux.HandleFunc("/v1/obs/metric", s.handleObsMetric)
 	mux.HandleFunc("/v1/obs/status", s.handleObsStatus)
+	mux.HandleFunc("/v1/upscale", s.handleUpscale)
+	mux.HandleFunc("/v1/upscale/", s.handleUpscaleID)
 	return s.middleware(mux)
 }
 
@@ -219,6 +222,50 @@ func (s *Server) handleObsStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"events": ev, "metrics": met, "errors": errs})
+}
+
+func (s *Server) handleUpscale(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		var body upscale.SubmitRequest
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			writeErr(w, http.StatusBadRequest, "invalid JSON")
+			return
+		}
+		job, err := upscale.Submit(body)
+		if err != nil {
+			writeErr(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusAccepted, job)
+	case http.MethodGet:
+		jobs, err := upscale.ListJobs(50)
+		if err != nil {
+			writeErr(w, http.StatusServiceUnavailable, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, jobs)
+	default:
+		writeErr(w, http.StatusMethodNotAllowed, "GET or POST")
+	}
+}
+
+func (s *Server) handleUpscaleID(w http.ResponseWriter, r *http.Request) {
+	id := strings.Trim(strings.TrimPrefix(r.URL.Path, "/v1/upscale/"), "/")
+	if id == "" {
+		s.handleUpscale(w, r)
+		return
+	}
+	if r.Method != http.MethodGet {
+		writeErr(w, http.StatusMethodNotAllowed, "GET")
+		return
+	}
+	job, err := upscale.Get(id)
+	if err != nil {
+		writeErr(w, http.StatusNotFound, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, job)
 }
 
 type ctxKey int
