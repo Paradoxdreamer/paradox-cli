@@ -25,6 +25,8 @@ type Server struct {
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", s.handleDashboard)
+	mux.HandleFunc("/dashboard", s.handleDashboard)
 	mux.HandleFunc("/health", s.handleHealth)
 	mux.HandleFunc("/v1/whoami", s.handleWhoami)
 	mux.HandleFunc("/v1/auth/register", s.handleAuthRegister)
@@ -47,7 +49,7 @@ func (s *Server) middleware(next http.Handler) http.Handler {
 		start := time.Now()
 		ww := &wrapWriter{ResponseWriter: w, status: 200}
 		w.Header().Set("X-Paradox-Gateway", "1")
-		if r.URL.Path != "/health" {
+		if r.URL.Path != "/health" && r.URL.Path != "/" && r.URL.Path != "/dashboard" {
 			if s.RequireKey {
 				key := extractAPIKey(r)
 				if key == "" {
