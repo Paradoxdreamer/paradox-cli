@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <rect width="1280" height="640" fill="#0a0a0a"/>
+  <defs>
+    <pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#121212" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="640" fill="url(#g)"/>
+  <rect x="24" y="24" width="1232" height="592" fill="none" stroke="#2a2a2a" stroke-width="2"/>
+  <rect x="40" y="40" width="8" height="560" fill="#e8e8e8"/>
+  <text x="80" y="230" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="56" font-weight="700" fill="#f0f0f0">PARADOX</text>
+  <text x="80" y="300" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="56" font-weight="700" fill="#a0a0a0">CLI</text>
+  <text x="80" y="370" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="22" fill="#777">Local backend platform  ·  auth · queue · gateway · agents</text>
+  <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14" fill="#bbb">
+    <rect x="80" y="420" width="70" height="32" fill="none" stroke="#333"/><text x="94" y="441">AUTH</text>
+    <rect x="162" y="420" width="80" height="32" fill="none" stroke="#333"/><text x="176" y="441">QUEUE</text>
+    <rect x="254" y="420" width="80" height="32" fill="none" stroke="#333"/><text x="268" y="441">FLAGS</text>
+    <rect x="346" y="420" width="100" height="32" fill="none" stroke="#333"/><text x="360" y="441">STORAGE</text>
+    <rect x="458" y="420" width="90" height="32" fill="none" stroke="#333"/><text x="472" y="441">DEPLOY</text>
+    <rect x="560" y="420" width="100" height="32" fill="none" stroke="#333"/><text x="574" y="441">GATEWAY</text>
+    <rect x="672" y="420" width="90" height="32" fill="none" stroke="#333"/><text x="686" y="441">AGENTS</text>
+  </g>
+  <rect x="820" y="160" width="360" height="70" fill="#111" stroke="#2a2a2a"/>
+  <text x="844" y="202" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" fill="#888">GATEWAY</text>
+  <line x1="1000" y1="230" x2="1000" y2="250" stroke="#333"/>
+  <rect x="820" y="250" width="360" height="70" fill="#111" stroke="#2a2a2a"/>
+  <text x="844" y="292" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" fill="#888">WORKERS</text>
+  <line x1="1000" y1="320" x2="1000" y2="340" stroke="#333"/>
+  <rect x="820" y="340" width="360" height="70" fill="#111" stroke="#2a2a2a"/>
+  <text x="844" y="382" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" fill="#888">STORAGE</text>
+  <text x="80" y="580" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14" fill="#555">github.com/Paradoxdreamer/paradox-cli</text>
+  <text x="980" y="580" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14" fill="#555">serious-engineer energy</text>
+</svg>

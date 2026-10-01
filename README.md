@@ -1,3 +1,5 @@
+![Paradox CLI](docs/banner.svg)
+
 # Paradox CLI
 
 **One toolkit for a personal backend platform.**
@@ -44,6 +46,7 @@ paradox cloud up
 # other terminal:
 curl http://127.0.0.1:8080/health
 paradox cloud status
+# board: http://127.0.0.1:8080/
 ```
 
 ### HTTP
@@ -72,6 +75,7 @@ curl -X POST http://127.0.0.1:8080/v1/agent/run -H 'Content-Type: application/js
 
 | Method | Path |
 |--------|------|
+| GET | `/` · `/dashboard` (monochrome board) |
 | GET | `/health` |
 | POST | `/v1/auth/register` · `/v1/auth/login` |
 | GET | `/v1/whoami` |
@@ -94,6 +98,15 @@ curl -X POST http://127.0.0.1:8080/v1/agent/run -H 'Content-Type: application/js
 ```
 
 Data: `~/.paradox/` or `$PARADOX_DATA_DIR`.
+
+## Social preview (link shares)
+
+For Discord / Twitter / Slack link cards, set the repo social image:
+
+1. Open **Settings → General → Social preview**
+2. Upload `docs/banner.png` (1280×640 monochrome)
+
+The README banner above shows on the repo page itself.
 
 ## Honest status
 
