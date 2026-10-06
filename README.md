@@ -112,6 +112,8 @@ The README banner above shows on the repo page itself.
 
 Local learning cloud — not multi-tenant AWS. Serious engineer foundation.
 
+**Attempting is a luxury for the weak**
+
 ## License
 
 MIT (planned)
